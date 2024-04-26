@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import java.time.LocalTime
 import java.time.temporal.ChronoUnit
-import kotlin.math.abs
 
 @Composable
 internal fun DefaultWheelTimePicker(
@@ -51,7 +50,8 @@ internal fun DefaultWheelTimePicker(
             )
         }
     val amPmHours = (1..if (infinite) Short.MAX_VALUE else 12)
-        .map { it.mod(12) }
+        .map { it.mod(13) }
+        .filter { it != 0}
         .map {
             AmPmHour(
                 text = it.toString(),
@@ -89,6 +89,26 @@ internal fun DefaultWheelTimePicker(
         )
     }
 
+    val startIndexHour = if (timeFormat == TimeFormat.HOUR_24) {
+        if (infinite) {
+            16384 + findGapBetweenClosestHour24(startTime.hour)
+        } else {
+            hours.find { it.value == startTime.hour }?.index ?: 0
+        }
+    } else {
+        if (infinite) {
+            16384 + findGapBetweenClosestHourAmPm(startTime.hour)
+        } else {
+            amPmHours.find { it.value == localTimeToAmPmHour(startTime) }?.index ?: 0
+        }
+    }
+
+    val startIndexMinute = if (infinite) {
+        16384 + findGapBetweenClosestMinute(startTime.minute)
+    } else {
+        minutes.find { it.value == startTime.minute }?.index ?: 0
+    }
+
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         if (selectorProperties.enabled().value) {
             Surface(
@@ -98,8 +118,9 @@ internal fun DefaultWheelTimePicker(
                 border = selectorProperties.border().value
             ) {}
         }
+        Log.d("DefaultWheelTimePicker", "Start index: ${hours.size / 2} ${hours[hours.size / 2]}}")
         Row {
-            Log.d("DefaultWheelTimePicker", "Start index: ${if (timeFormat == TimeFormat.HOUR_24) (hours.size / 2) - findGapBetweenClosestHour(16) else (amPmHours.size / 2) - findGapBetweenClosestHourAmPm(4)}")
+            //Log.d("DefaultWheelTimePicker", "Start index: ${if (timeFormat == TimeFormat.HOUR_24) (hours.size / 2) - findGapBetweenClosestHour(16) else (amPmHours.size / 2) - findGapBetweenClosestHourAmPm(4)}")
             //Hour
             WheelTextPicker(
                 size = DpSize(
@@ -110,15 +131,16 @@ internal fun DefaultWheelTimePicker(
                 rowCount = rowCount,
                 style = textStyle,
                 color = textColor,
-                startIndex = if (timeFormat == TimeFormat.HOUR_24) (hours.size / 2) - findGapBetweenClosestHour(16) else (amPmHours.size / 2) - findGapBetweenClosestHourAmPm(4),
+                startIndex = startIndexHour,
                 selectorProperties = WheelPickerDefaults.selectorProperties(
                     enabled = false
                 ),
                 onScrollFinished = { snappedIndex ->
 
-                    val modSnappedIndex = if (infinite) snappedIndex.mod(if (timeFormat == TimeFormat.HOUR_24) 24 else 12) else snappedIndex
+                    val modSnappedIndex =
+                        if (infinite) snappedIndex.mod(if (timeFormat == TimeFormat.HOUR_24) 24 else 12) else snappedIndex
 
-                    val newHour = if(timeFormat == TimeFormat.HOUR_24) {
+                    val newHour = if (timeFormat == TimeFormat.HOUR_24) {
                         hours.find { it.index == modSnappedIndex }?.value
                     } else {
                         amPmHourToHour24(
@@ -150,7 +172,8 @@ internal fun DefaultWheelTimePicker(
                                 ),
                                 timeFormat
                             )?.let {
-                                return@WheelTextPicker snappedIndex }
+                                return@WheelTextPicker snappedIndex
+                            }
                         }
                     }
 
@@ -171,7 +194,7 @@ internal fun DefaultWheelTimePicker(
                 rowCount = rowCount,
                 style = textStyle,
                 color = textColor,
-                startIndex = minutes.find { it.value == startTime.minute }?.index ?: 0,
+                startIndex = startIndexMinute,
                 selectorProperties = WheelPickerDefaults.selectorProperties(enabled = false),
                 onScrollFinished = { snappedIndex ->
 
@@ -409,6 +432,14 @@ private fun amPmValueFromTime(time: LocalTime): AmPmValue {
     return if(time.hour > 11) AmPmValue.PM else AmPmValue.AM
 }
 
-internal fun findGapBetweenClosestHourAmPm(i: Int): Int = abs(LocalTime.now().hour % 12 - i)
+private fun findGapBetweenClosestMinute(minute: Int) = minute - 4
 
-internal fun findGapBetweenClosestHour(i: Int): Int = abs(LocalTime.now().hour - i)
+// we need to decrease it by hourOffsetFor24 to get the closest hour to the middle of the list
+private fun findGapBetweenClosestHour24(hour: Int) = hour - hourOffsetFor24
+
+// we need to decrease it by hourOffsetFor12 to get the closest hour to the middle of the list
+private fun findGapBetweenClosestHourAmPm(hour: Int) = hour - hourOffsetFor12
+
+private val hourOffsetFor24 = 16    // Hour 16 is middle of Short.MAX_VALUE
+private val hourOffsetFor12 = 4     // Hour 4 is middle of Short.MAX_VALUE
+private val minuteOffset = 4        // Minute 4 is middle of Short.MAX_VALUE

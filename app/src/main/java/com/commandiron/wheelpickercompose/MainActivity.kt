@@ -36,7 +36,10 @@ class MainActivity : ComponentActivity() {
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        WheelTimePicker(infinite = true) { snappedTime ->
+                        WheelTimePicker(
+                            infinite = true,
+                            timeFormat = TimeFormat.AM_PM,
+                        ) { snappedTime ->
                             println(snappedTime)
                         }
                         WheelDatePicker { snappedDate ->
