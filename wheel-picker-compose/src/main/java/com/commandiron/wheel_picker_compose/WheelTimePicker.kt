@@ -25,6 +25,7 @@ fun WheelTimePicker(
     rowCount: Int = 3,
     textStyle: TextStyle = MaterialTheme.typography.titleMedium,
     textColor: Color = LocalContentColor.current,
+    infinite: Boolean = false,
     selectorProperties: SelectorProperties = WheelPickerDefaults.selectorProperties(),
     onSnappedTime : (snappedTime: LocalTime) -> Unit = {},
 ) {
@@ -38,6 +39,7 @@ fun WheelTimePicker(
         rowCount,
         textStyle,
         textColor,
+        infinite,
         selectorProperties,
         onSnappedTime = { snappedTime, _ ->
             onSnappedTime(snappedTime.snappedLocalTime)

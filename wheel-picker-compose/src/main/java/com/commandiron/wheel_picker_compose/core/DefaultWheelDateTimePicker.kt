@@ -6,7 +6,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,6 +32,7 @@ internal fun DefaultWheelDateTimePicker(
     rowCount: Int = 3,
     textStyle: TextStyle = MaterialTheme.typography.titleMedium,
     textColor: Color = LocalContentColor.current,
+    infinite: Boolean = false,
     selectorProperties: SelectorProperties = WheelPickerDefaults.selectorProperties(),
     onSnappedDateTime : (snappedDateTime: SnappedDateTime) -> Int? = { _ -> null }
 ) {
@@ -106,6 +111,7 @@ internal fun DefaultWheelDateTimePicker(
                 rowCount = rowCount,
                 textStyle = textStyle,
                 textColor = textColor,
+                infinite = infinite,
                 selectorProperties = WheelPickerDefaults.selectorProperties(
                     enabled = false
                 ),
